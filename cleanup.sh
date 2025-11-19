@@ -23,5 +23,9 @@ rm -rf data
 rm -rf jars
 rm -rf warehouse
 
+echo "🧊 Shutting down Iceberg REST Catalog (docker)..."
+make shutdown_iceberg_rest_catalog
+echo "✅ Iceberg REST Catalog stopped"
+
 echo "🎉 Cleanup complete!"
 tree .

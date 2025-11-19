@@ -96,6 +96,10 @@ echo "📊 Creating sample data..."
 python sample-data.py
 echo "✅ Sample data created"
 
+echo "🧊 Spinning up Iceberg REST Catalog (docker)..."
+make spin_up_iceberg_rest_catalog
+echo "✅ Iceberg REST Catalog running"
+
 echo ""
 echo "🎉 Setup Complete!"
 tree .

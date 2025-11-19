@@ -14,10 +14,9 @@ Run the setup script. It will:
 3. Create a Python virtual environment
 4. Install the necessary Python dependencies
 5. Create sample data
-
+6. Spin up the Iceberg REST Catalog server
 ```bash
-chmod +x setup.sh
-./setup.sh
+make setup
 ```
 
 # Paimon-only Demo
@@ -71,6 +70,5 @@ Tests Paimon's integration with Iceberg REST Catalog servers.
 
 # Clean up
 ```bash
-chmod +x cleanup.sh
-./cleanup.sh
+make cleanup
 ```
