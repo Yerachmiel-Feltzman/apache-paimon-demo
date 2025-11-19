@@ -1,0 +1,11 @@
+
+services:
+  iceberg-rest-catalog:
+    container_name: iceberg-rest-catalog
+    image: apache/iceberg-rest-fixture
+    environment:
+      - CATALOG_WAREHOUSE=/tmp/wh
+    ports:
+      - "8181:8181"
+    volumes:
+      - ./warehouse:/tmp/wh
