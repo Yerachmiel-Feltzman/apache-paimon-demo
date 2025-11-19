@@ -72,3 +72,8 @@ Tests Paimon's integration with Iceberg REST Catalog servers.
 ```bash
 make cleanup
 ```
+
+
+# TODO
+1. Can we query the mirror Icebeg tables with an Iceberg-only engine (ie, the engine knows nothing about Paimon)? One good idea would be to query with duckdb or polars.
+2. Test with Spark Streaming.

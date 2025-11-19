@@ -790,13 +790,13 @@ def demo_rest_catalog_integration():
         print("   ✅ Cleaned up test table")
     else:
         print("\n🔍 Querying table via REST catalog BEFORE adding new data (sanity check)...")
-        query_before_alter = f"SELECT * FROM {edge_case_rest_table} ORDER BY id"
+        query_before_alter = f"SELECT * FROM {edge_case_rest_table}"
         print_query(query_before_alter, "Querying via REST catalog before new data")
         try:
             spark.sql(query_before_alter).show()
         except Exception as e:
             print("   ⚠️  Could not query via REST catalog before new data:")
-            print(f"   Error: {str(e)[:200]}...")
+            print(f"   Error: {str(e)}")
 
         # Insert new data after ALTER
         print("\n📥 Inserting NEW data AFTER ALTER...")
@@ -805,9 +805,13 @@ def demo_rest_catalog_integration():
                 (4, 'Item D', 400),
                 (5, 'Item E', 500)
         """
-        print_query(insert_new_edge_sql.strip(), "Inserting 2 new rows after ALTER")
-        spark.sql(insert_new_edge_sql)
-        print("   ✅ New data inserted")
+
+        try:
+            print_query(insert_new_edge_sql.strip(), "Inserting 2 new rows after ALTER")
+            spark.sql(insert_new_edge_sql)
+            print("   ✅ New data inserted")
+        except Exception as e:
+            print(f"   ❌ Failed to insert new data: {str(e)}")
         
         # Try to query via REST catalog
         print("\n🔍 Testing if table is accessible via REST catalog after ALTER...")
