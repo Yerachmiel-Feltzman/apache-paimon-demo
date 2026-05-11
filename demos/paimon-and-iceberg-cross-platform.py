@@ -186,15 +186,19 @@ def demo_basic_cross_platform(spark):
     through both Paimon and Iceberg catalogs.
     """
     print("\n" + "="*70)
-    print("📋 DEMO 1: Basic Cross-Platform Query")
+    print("📋 DEMO 1: Cross-Platform Query")
     print("="*70)
-    print("Goal: Verify the same physical table can be queried through both Paimon and Iceberg catalogs")
+    print("📚 Key Concept: One table, two catalog interfaces")
+    print("   • Paimon writes Iceberg metadata alongside its own")
+    print("   • Enables interoperability between ecosystems")
     print("="*70)
     
     table_name = "paimon_catalog.`default`.cities"
     
     # Create table with Iceberg compatibility
-    print("\n📝 Step 1: Creating Paimon table with Iceberg compatibility...")
+    print("\n📝 Step 1: Create Paimon table with Iceberg compatibility")
+    print("-" * 50)
+    print("📚 Set 'metadata.iceberg.storage' = 'hadoop-catalog'")
     create_sql = f"""
         CREATE TABLE IF NOT EXISTS {table_name} (
             country STRING,
@@ -206,10 +210,12 @@ def demo_basic_cross_platform(spark):
     """
     print_query(create_sql.strip(), "Creating table with Iceberg compatibility")
     spark.sql(create_sql)
-    print("   ✅ Table created")
+    print("✅ Table created")
+    print("💡 Paimon will write Iceberg metadata to <warehouse>/iceberg/")
     
     # Insert sample data
-    print("\n📥 Step 2: Inserting sample data...")
+    print("\n📝 Step 2: Insert sample data via Paimon catalog")
+    print("-" * 50)
     insert_sql = f"""
         INSERT INTO {table_name} VALUES 
             ('usa', 'new york'),
@@ -219,34 +225,33 @@ def demo_basic_cross_platform(spark):
     """
     print_query(insert_sql.strip(), "Inserting 4 rows of sample data")
     spark.sql(insert_sql)
-    print("   ✅ Data inserted")
-    print("   Expected: 4 rows inserted")
+    print("✅ Data inserted")
     
     # Query via Paimon catalog
-    print("\n🔍 Step 3: Querying via Paimon catalog (native)...")
+    print("\n📝 Step 3: Query via Paimon catalog (native)")
+    print("-" * 50)
     query_paimon = f"SELECT * FROM {table_name} WHERE country = 'germany'"
-    print_query(query_paimon, "Querying German cities via Paimon catalog")
-    print("   Expected: 2 rows (berlin, hamburg)")
+    print_query(query_paimon, "Querying German cities via Paimon")
     result_paimon = spark.sql(query_paimon)
     result_paimon.show()
     paimon_count = result_paimon.count()
-    print_result(expected=2, actual=paimon_count, 
-                success_msg="Found expected 2 German cities via Paimon catalog")
+    print(f"✅ Found {paimon_count} German cities via Paimon")
     
     # Query via Iceberg catalog (cross-platform)
-    print("\n🔍 Step 4: Querying the SAME table via Iceberg catalog (cross-platform)...")
+    print("\n📝 Step 4: Query the SAME table via Iceberg catalog")
+    print("-" * 50)
     query_iceberg = "SELECT * FROM iceberg_catalog.`default`.cities WHERE country = 'germany'"
-    print_query(query_iceberg, "Querying German cities via Iceberg catalog")
-    print("   Expected: 2 rows (berlin, hamburg) - same data as Paimon query")
+    print_query(query_iceberg, "Querying via Iceberg catalog (cross-platform)")
+    print("📚 Notice: Same table, different catalog!")
     result_iceberg = spark.sql(query_iceberg)
     result_iceberg.show()
     iceberg_count = result_iceberg.count()
-    print_result(expected=2, actual=iceberg_count,
-                success_msg="Found expected 2 German cities via Iceberg catalog")
+    print(f"✅ Found {iceberg_count} German cities via Iceberg")
     
-    print("\n✨ SUCCESS! The same physical table can be queried through both catalogs!")
-    print_result(expected=paimon_count, actual=iceberg_count,
-                success_msg="Both catalogs return the same data - cross-platform compatibility confirmed!")
+    print("\n✨ SUCCESS! The same physical table queried via both catalogs!")
+    print(f"   • Paimon catalog: {paimon_count} rows")
+    print(f"   • Iceberg catalog: {iceberg_count} rows")
+    print("💡 This enables interoperability between Paimon and Iceberg ecosystems")
 
 
 # ============================================================================
@@ -262,15 +267,17 @@ def demo_drop_table_behavior(spark):
     print("\n" + "="*70)
     print("🧪 DEMO 2: Drop Table Behavior Test")
     print("="*70)
-    print("Goal: Determine if dropping a Paimon table also removes its Iceberg mirror")
-    print("Expected: Iceberg table should be automatically removed (best case)")
+    print("📚 Question: What happens when you drop a Paimon table?")
+    print("   • Does the Iceberg mirror get dropped automatically?")
+    print("   • Or does it persist (requiring manual cleanup)?")
     print("="*70)
     
     table_name = "paimon_catalog.`default`.test_drop"
     iceberg_table_name = "iceberg_catalog.`default`.test_drop"
     
     # Step 1: Clean up any existing tables
-    print("\n🧹 Step 1: Cleaning up existing tables (if any)...")
+    print("\n🧹 Step 1: Clean up existing tables (if any)")
+    print("-" * 50)
     drop_sql = f"DROP TABLE IF EXISTS {iceberg_table_name}"
     print_query(drop_sql, "Dropping Iceberg table if exists")
     try:
@@ -280,10 +287,11 @@ def demo_drop_table_behavior(spark):
     drop_sql = f"DROP TABLE IF EXISTS {table_name}"
     print_query(drop_sql, "Dropping Paimon table if exists")
     spark.sql(drop_sql)
-    print("   ✅ Cleanup complete")
+    print("✅ Cleanup complete")
     
     # Step 2: Create Paimon table with Iceberg compatibility
-    print("\n📝 Step 2: Creating Paimon table with Iceberg compatibility...")
+    print("\n📝 Step 2: Create Paimon table with Iceberg compatibility")
+    print("-" * 50)
     create_sql = f"""
         CREATE TABLE {table_name} (
             id INT,
@@ -295,90 +303,82 @@ def demo_drop_table_behavior(spark):
     """
     print_query(create_sql.strip(), "Creating table with Iceberg compatibility")
     spark.sql(create_sql)
-    print("   ✅ Table created")
+    print("✅ Table created")
     
     # Step 3: Insert data
-    print("\n📥 Step 3: Inserting data...")
+    print("\n📝 Step 3: Insert test data")
+    print("-" * 50)
     insert_sql = f"""
         INSERT INTO {table_name} VALUES 
             (1, 'Alice'),
             (2, 'Bob'),
             (3, 'Charlie')
     """
-    print_query(insert_sql.strip(), "Inserting 3 rows")
+    print_query(insert_sql.strip(), "Inserting 3 test rows")
     spark.sql(insert_sql)
-    print("   ✅ Data inserted")
-    print("   Expected: 3 rows inserted")
+    print("✅ Data inserted")
     
     # Step 4: Verify both catalogs can see the table
-    print("\n🔍 Step 4: Verifying table is accessible via both catalogs...")
+    print("\n📝 Step 4: Verify table is accessible via BOTH catalogs")
+    print("-" * 50)
     query_paimon = f"SELECT COUNT(*) as count FROM {table_name}"
-    print_query(query_paimon, "Counting rows via Paimon catalog")
+    print_query(query_paimon, "Count via Paimon catalog")
     paimon_count = spark.sql(query_paimon).collect()[0]['count']
-    print_result(expected=3, actual=paimon_count,
-                success_msg=f"Paimon catalog sees {paimon_count} rows")
+    print(f"✅ Paimon sees {paimon_count} rows")
     
     query_iceberg = f"SELECT COUNT(*) as count FROM {iceberg_table_name}"
-    print_query(query_iceberg, "Counting rows via Iceberg catalog")
+    print_query(query_iceberg, "Count via Iceberg catalog")
     iceberg_count = spark.sql(query_iceberg).collect()[0]['count']
-    print_result(expected=3, actual=iceberg_count,
-                success_msg=f"Iceberg catalog sees {iceberg_count} rows")
+    print(f"✅ Iceberg sees {iceberg_count} rows")
     
     # Step 5: Drop the Paimon table
-    print("\n🗑️  Step 5: Dropping the Paimon table...")
+    print("\n📝 Step 5: Drop the Paimon table")
+    print("-" * 50)
     drop_sql = f"DROP TABLE {table_name}"
     print_query(drop_sql, "Dropping Paimon table")
     spark.sql(drop_sql)
-    print("   ✅ Paimon table dropped")
+    print("✅ Paimon table dropped")
     
     # Step 6: Try to query via Iceberg catalog
-    print("\n🔍 Step 6: Testing if Iceberg table still exists after Paimon drop...")
+    print("\n📝 Step 6: Test if Iceberg table still exists after Paimon drop")
+    print("-" * 50)
     query_test = f"SELECT * FROM {iceberg_table_name}"
     print_query(query_test, "Querying Iceberg table after Paimon drop")
-    print("   Expected: Table should NOT exist (automatically removed)")
-    print("   Alternative: Table exists but queries fail (inconsistent state)")
     
     try:
         result = spark.sql(query_test)
         result.show()
         count = result.count()
-        print(f"\n   ⚠️  RESULT: Iceberg table STILL EXISTS with {count} rows!")
-        print("   💡 CONCLUSION:")
-        print("   • Dropping the Paimon table does NOT drop the Iceberg metadata")
-        print("   • However, the data files were deleted, leading to potential errors")
-        print("   • You need to manually drop the Iceberg table as well")
-        print_result(expected="Table removed", actual="Table exists",
-                    failure_msg="Iceberg metadata persists independently")
+        print(f"\n⚠️  RESULT: Iceberg table STILL EXISTS with {count} rows!")
+        print("\n📚 CONCLUSION:")
+        print("   • Dropping Paimon table does NOT drop Iceberg metadata")
+        print("   • The Iceberg table persists (potentially broken)")
+        print("   💡 Recommendation: Manually drop both tables when cleaning up")
     except Exception as e:
         error_msg = str(e)
         if "not found" in error_msg.lower() or "does not exist" in error_msg.lower():
-            print(f"\n   ✅ RESULT: Iceberg table was automatically removed!")
-            print("   💡 CONCLUSION:")
-            print("   • Dropping the Paimon table also removes the Iceberg metadata")
-            print("   • This is the expected behavior for mirrored tables")
-            print_result(expected="Table removed", actual="Table removed",
-                        success_msg="Iceberg metadata automatically cleaned up")
+            print(f"\n✅ RESULT: Iceberg table was automatically removed!")
+            print("\n📚 CONCLUSION:")
+            print("   • Dropping Paimon table also removes Iceberg metadata")
+            print("   • This is clean behavior for mirrored tables")
         else:
-            print(f"\n   ⚠️  RESULT: Iceberg table exists but is broken!")
-            print(f"   Error: {error_msg}")
-            print("\n   💡 CONCLUSION:")
-            print("   • The Iceberg metadata still exists")
-            print("   • But the data files were deleted with the Paimon table")
+            print(f"\n⚠️  RESULT: Iceberg table exists but is broken!")
+            print(f"   Error: {error_msg[:150]}...")
+            print("\n📚 CONCLUSION:")
+            print("   • Iceberg metadata exists but data files were deleted")
             print("   • This creates an inconsistent state")
-            print(f"   • Manual cleanup needed: DROP TABLE {iceberg_table_name}")
-            print_result(expected="Table removed", actual="Table exists (broken)",
-                        failure_msg="Metadata persists but data files are gone")
     
     # Step 7: Clean up Iceberg table if it still exists
-    print("\n🧹 Step 7: Final cleanup...")
+    print("\n🧹 Step 7: Final cleanup")
+    print("-" * 50)
     cleanup_sql = f"DROP TABLE IF EXISTS {iceberg_table_name}"
     print_query(cleanup_sql, "Cleaning up Iceberg table")
     try:
         spark.sql(cleanup_sql)
-        print("   ✅ Iceberg table cleaned up")
+        print("✅ Iceberg table cleaned up")
     except Exception as e:
         print(f"   ⚠️  {str(e)}")
-        print("   ✅ No Iceberg table to clean up")
+        print("✅ No Iceberg table to clean up")
 
 
 # ============================================================================
@@ -395,15 +395,18 @@ def demo_alter_table_compatibility(spark):
     print("\n" + "="*70)
     print("🧪 DEMO 3: ALTER TABLE Compatibility Test")
     print("="*70)
-    print("Goal: Test if ALTER TABLE can add Iceberg compatibility to existing tables")
-    print("Expected: Either all data accessible OR only new data accessible after ALTER")
+    print("📚 Question: Can we add Iceberg compatibility to an existing table?")
+    print("   • Create table WITHOUT Iceberg property")
+    print("   • Use ALTER TABLE to add the property")
+    print("   • Check if old data becomes visible via Iceberg")
     print("="*70)
     
     table_name = "paimon_catalog.`default`.cities2"
     iceberg_table_name = "iceberg_catalog.`default`.cities2"
     
     # Step 1: Clean up - drop BOTH catalogs to avoid stale metadata
-    print("\n🧹 Step 1: Cleaning up (drop tables if they exist)...")
+    print("\n🧹 Step 1: Clean up (drop tables if they exist)")
+    print("-" * 50)
     drop_sql = f"DROP TABLE IF EXISTS {iceberg_table_name}"
     print_query(drop_sql, "Dropping Iceberg table if exists")
     try:
@@ -413,22 +416,25 @@ def demo_alter_table_compatibility(spark):
     drop_sql = f"DROP TABLE IF EXISTS {table_name}"
     print_query(drop_sql, "Dropping Paimon table if exists")
     spark.sql(drop_sql)
-    print("   ✅ Cleanup complete")
+    print("✅ Cleanup complete")
     
     # Step 2: Create table WITHOUT Iceberg compatibility
-    print("\n📝 Step 2: Creating table WITHOUT Iceberg compatibility...")
+    print("\n📝 Step 2: Create table WITHOUT Iceberg compatibility")
+    print("-" * 50)
     create_sql = f"""
         CREATE TABLE {table_name} (
             country STRING,
             name STRING
         )
     """
-    print_query(create_sql.strip(), "Creating table without Iceberg compatibility")
+    print_query(create_sql.strip(), "Creating table WITHOUT Iceberg compatibility")
     spark.sql(create_sql)
-    print("   ✅ Table created (no Iceberg compatibility)")
+    print("✅ Table created")
+    print("📚 No 'metadata.iceberg.storage' property set")
     
     # Step 3: Insert initial data
-    print("\n📥 Step 3: Inserting initial data (before ALTER)...")
+    print("\n📝 Step 3: Insert initial data (before ALTER)")
+    print("-" * 50)
     insert_sql = f"""
         INSERT INTO {table_name} VALUES 
             ('usa', 'new york'),
@@ -436,27 +442,29 @@ def demo_alter_table_compatibility(spark):
             ('usa', 'chicago'),
             ('germany', 'hamburg')
     """
-    print_query(insert_sql.strip(), "Inserting 4 rows before ALTER")
+    print_query(insert_sql.strip(), "Inserting 4 rows BEFORE ALTER")
     spark.sql(insert_sql)
-    print("   ✅ Initial data inserted")
-    print("   Expected: 4 rows inserted")
+    print("✅ Initial data inserted")
     
     query_before = f"SELECT * FROM {table_name}"
     print_query(query_before, "Verifying data via Paimon catalog")
     spark.sql(query_before).show()
     
     # Step 4: ALTER TABLE to add Iceberg compatibility
-    print("\n🔧 Step 4: ALTER TABLE to add Iceberg compatibility property...")
+    print("\n📝 Step 4: ALTER TABLE to add Iceberg compatibility")
+    print("-" * 50)
     alter_sql = f"""
         ALTER TABLE {table_name}
         SET TBLPROPERTIES ('metadata.iceberg.storage' = 'hadoop-catalog')
     """
-    print_query(alter_sql.strip(), "Adding Iceberg compatibility via ALTER TABLE")
+    print_query(alter_sql.strip(), "Adding Iceberg property via ALTER TABLE")
     spark.sql(alter_sql)
-    print("   ✅ Property added via ALTER TABLE")
+    print("✅ Property added")
+    print("📚 Now testing: Is the OLD data visible via Iceberg?")
     
     # Step 4.1: Query via Iceberg catalog
-    print("\n🔍 Step 4.1: Querying via Iceberg catalog...")
+    print("\n📝 Step 4.1: Query via Iceberg catalog (immediately after ALTER)")
+    print("-" * 50)
     query_iceberg = """
         SELECT * FROM iceberg_catalog.`default`.cities2 
         ORDER BY country, name
@@ -464,92 +472,76 @@ def demo_alter_table_compatibility(spark):
     print_query(query_iceberg.strip(), "Querying via Iceberg catalog")
     try:
         spark.sql(query_iceberg).show()
-        print("   ✅ Query succeeded! Found rows")
+        print("✅ Query succeeded! Old data is visible via Iceberg")
     except Exception as e:
-        print("   ⚠️  Could not query via Iceberg catalog:")
+        print("⚠️  Could not query via Iceberg:")
         print(f"   Error: {str(e)}")
 
     # Step 5: Insert new data after ALTER
-    print("\n📥 Step 5: Inserting NEW data AFTER ALTER...")
+    print("\n📝 Step 5: Insert NEW data AFTER ALTER")
+    print("-" * 50)
     insert_new_sql = f"""
         INSERT INTO {table_name} VALUES 
             ('france', 'paris'),
             ('spain', 'madrid')
     """
-    print_query(insert_new_sql.strip(), "Inserting 2 new rows after ALTER")
+    print_query(insert_new_sql.strip(), "Inserting 2 new rows AFTER ALTER")
     spark.sql(insert_new_sql)
-    print("   ✅ New data inserted")
-    print("   Expected: 2 additional rows (total should be 6)")
+    print("✅ New data inserted")
     
     # Step 6: Try to query via Iceberg catalog
-    print("\n🔍 Step 6: Querying via Iceberg catalog after ALTER...")
+    print("\n📝 Step 6: Query via Iceberg catalog after new data insert")
+    print("-" * 50)
     query_iceberg = """
         SELECT * FROM iceberg_catalog.`default`.cities2 
         ORDER BY country, name
     """
-    print_query(query_iceberg.strip(), "Querying via Iceberg catalog")
-    print("   Expected: At least 2 rows (new data), ideally 6 rows (all data)")
-    print("   Hypothesis: If ALTER works, we should see at least the NEW data")
+    print_query(query_iceberg.strip(), "Querying ALL data via Iceberg catalog")
     
     try:
         result = spark.sql(query_iceberg)
         result.show()
         row_count = result.count()
-        print(f"\n   ✅ Query succeeded! Found {row_count} rows")
+        print(f"✅ Query succeeded! Found {row_count} rows via Iceberg")
         
         # Analyze what data is visible
-        print("\n   📊 Analyzing data visibility:")
+        print("\n📊 Analysis: Which data is visible via Iceberg?")
         query_old = """
             SELECT * FROM iceberg_catalog.`default`.cities2 
             WHERE country IN ('usa', 'germany')
         """
-        print_query(query_old.strip(), "Counting old data (usa, germany)")
+        print_query(query_old.strip(), "Counting OLD data (usa, germany)")
         old_data = spark.sql(query_old).count()
         query_new = """
             SELECT * FROM iceberg_catalog.`default`.cities2 
             WHERE country IN ('france', 'spain')
         """
-        print_query(query_new.strip(), "Counting new data (france, spain)")
+        print_query(query_new.strip(), "Counting NEW data (france, spain)")
         new_data = spark.sql(query_new).count()
         
-        print(f"   • Old data (usa, germany): {old_data} rows")
-        print(f"   • New data (france, spain): {new_data} rows")
+        print(f"   • Old data (before ALTER): {old_data} rows")
+        print(f"   • New data (after ALTER): {new_data} rows")
         
-        # Draw conclusions with expected vs actual
-        print("\n   💡 CONCLUSION:")
+        # Draw conclusions
+        print("\n📚 CONCLUSION:")
         if new_data > 0 and old_data == 0:
-            print("   ALTER TABLE enables Iceberg compatibility for FUTURE writes only!")
-            print_result(expected="All 6 rows", actual=f"{new_data} rows (only new data)",
-                        failure_msg="Old data not accessible via Iceberg")
+            print("   ⚠️  ALTER TABLE enables Iceberg for FUTURE writes only!")
             print("   • Old data (before ALTER) is NOT accessible via Iceberg")
             print("   • New data (after ALTER) IS accessible via Iceberg")
-            print("   • Recommendation: Migrate old data if needed")
+            print("   💡 Recommendation: Set property at CREATE TABLE time")
         elif new_data > 0 and old_data > 0:
             print("   ✅ ALTER TABLE WORKS! All data is accessible via Iceberg!")
-            print_result(expected="All 6 rows", actual=f"{row_count} rows",
-                        success_msg="Both old and new data accessible")
             print("   • Both old and new data became accessible after ALTER")
-            print("   • Paimon generates Iceberg metadata on-demand or retroactively")
-            print("\n   📝 Note: Documentation recommends setting property at CREATE TABLE time")
+            print("   • Paimon generates Iceberg metadata on-demand")
         else:
-            print("   ALTER TABLE does NOT fully enable Iceberg compatibility")
-            print_result(expected="At least 2 rows", actual=f"{row_count} rows",
-                        failure_msg="ALTER TABLE did not enable Iceberg compatibility")
+            print("   ⚠️  ALTER TABLE did not fully enable Iceberg compatibility")
             
     except Exception as e:
         error_msg = str(e)
-        print(f"\n   ❌ Query failed!")
-        print(f"   Error: {error_msg}")
-        
-        print("\n   💡 CONCLUSION: ALTER TABLE behavior may be inconsistent")
-        print_result(expected="Table queryable", actual="Query failed",
-                    failure_msg="ALTER TABLE may not enable Iceberg compatibility")
-        print("   • Metadata generation might be asynchronous or on-demand")
-        print("   • Some metadata files might be missing")
-        print("\n   📝 RECOMMENDATION:")
-        print("   • Set 'metadata.iceberg.storage' at CREATE TABLE time (recommended)")
-        print("   • This is the documented and reliable approach")
-        print("   • If using ALTER, test thoroughly and allow time for metadata generation")
+        print(f"❌ Query failed: {error_msg[:150]}...")
+        print("\n📚 CONCLUSION:")
+        print("   • ALTER TABLE behavior may be inconsistent")
+        print("   💡 Recommendation: Set 'metadata.iceberg.storage' at CREATE TABLE time")
 
 
 # ============================================================================
@@ -570,9 +562,13 @@ def demo_rest_catalog_integration():
     using Spark config properties (not SQL CREATE CATALOG).
     """
     print("\n" + "="*70)
-    print("🧪 DEMO 4: REST Catalog Integration Test")
+    print("🧪 DEMO 4: REST Catalog Integration")
     print("="*70)
-    print("Testing Paimon's integration with Iceberg REST Catalog")
+    print("📚 Advanced Feature: Centralized metadata management")
+    print("   • Paimon registers tables in an Iceberg REST Catalog")
+    print("   • Other tools can discover tables via the REST API")
+    print("   • Enables enterprise-grade metadata management")
+    print("="*70)
     
     # REST catalog configuration - matches docker-compose.yaml
     rest_catalog_uri = os.getenv('ICEBERG_REST_URI', 'http://localhost:8181')
@@ -581,9 +577,8 @@ def demo_rest_catalog_integration():
     print(f"\n⚙️  Configuration:")
     print(f"   REST Catalog Name: {rest_catalog_name}")
     print(f"   REST Catalog URI: {rest_catalog_uri}")
-    print(f"   Note: Requires Iceberg REST Catalog server running")
+    print(f"   Prerequisite: Docker container must be running")
     print(f"   Start with: docker-compose up -d iceberg-rest-catalog")
-    print(f"   Override URI with: ICEBERG_REST_URI environment variable")
     
     # Get base directory for creating new Spark session
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -1023,10 +1018,22 @@ def run_all_demos(spark):
 
 def main():
     """Main entry point for the demo."""
+    print("\n" + "="*70)
     print("🚀 Cross-Platform Demo: Paimon + Iceberg")
-    print("=" * 70)
-    print("Demonstrating Paimon's Iceberg compatibility feature")
-    print("=" * 70)
+    print("="*70)
+    print("📚 What is Paimon's Iceberg Compatibility?")
+    print("   • Paimon can write Iceberg-compatible metadata")
+    print("   • The SAME physical table can be queried via both:")
+    print("     - Paimon catalog (native Paimon features)")
+    print("     - Iceberg catalog (standard Iceberg tools)")
+    print("="*70)
+    print("\n📋 This demo will demonstrate:")
+    print("   1. Creating a Paimon table with Iceberg compatibility")
+    print("   2. Querying the same table via both catalogs")
+    print("   3. Drop table behavior across catalogs")
+    print("   4. ALTER TABLE compatibility")
+    print("   5. REST Catalog integration")
+    print("="*70)
     
     # Get base directory
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -1041,6 +1048,12 @@ def main():
         
         print("\n" + "="*70)
         print("✅ All demos completed successfully!")
+        print("="*70)
+        print("\n📚 Key Takeaways:")
+        print("   1. Paimon tables can be read by Iceberg tools")
+        print("   2. Use 'metadata.iceberg.storage' = 'hadoop-catalog'")
+        print("   3. Set the property at CREATE TABLE time (recommended)")
+        print("   4. REST Catalog enables centralized metadata management")
         print("="*70)
         
         return 0

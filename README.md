@@ -5,7 +5,11 @@
 - Python 3.11 (I recommend using pyenv to install Python so it will pick up the correct version automatically from the [.python-version](.python-version) file.)
 
 ## Installation
-Run the setup script. It will:
+Run the setup script. 
+```bash
+make setup
+```
+It will:
 1. Create the necessary directories
 2. Download the necessary JARs:
    - `paimon-spark-3.4-1.3.0.jar` - Paimon Spark integration
@@ -15,15 +19,19 @@ Run the setup script. It will:
 4. Install the necessary Python dependencies
 5. Create sample data
 6. Spin up the Iceberg REST Catalog server
-```bash
-make setup
-```
 
 # Paimon-only Demo
 
+Run as Python script:
 ```bash
 make run_paimon_only_demo
 ```
+
+Or interactively in Jupyter:
+```bash
+make run_paimon_only_notebook
+```
+
 💡 Key Takeaways:
 - Paimon provides ACID transactions with primary keys
 - Write operations (UPSERT tested) work with Spark SQL
@@ -31,8 +39,14 @@ make run_paimon_only_demo
 
 # Paimon + Iceberg Cross-Platform Demo
 
+Run as Python script:
 ```bash
 make run_paimon_and_iceberg_cross_platform_demo
+```
+
+Or interactively in Jupyter:
+```bash
+make run_paimon_and_iceberg_cross_platform_notebook
 ```
 
 This demo tests Paimon's Iceberg compatibility feature with multiple scenarios:
@@ -75,5 +89,5 @@ make cleanup
 
 
 # TODO
-1. Can we query the mirror Icebeg tables with an Iceberg-only engine (ie, the engine knows nothing about Paimon)? One good idea would be to query with duckdb or polars.
+1. Can we query the mirror Iceberg tables with an Iceberg-only engine (ie, the engine knows nothing about Paimon)? One good idea would be to query with duckdb or polars.
 2. Test with Spark Streaming.
